@@ -43,25 +43,7 @@ def recv_data(client_socket):
             if not data:
                 break
 
-            if str(data).__contains__("Name:"):
-                p = TimePrint(f"Received >> {data}")
-                printList.append(p)
-                name = data.split(": ")[1]
-                log = Log(name + ".txt")
-                for p in printList:
-                    log.write(p)
-                printList.clear()
-                print()
-                log.write()
-            else:
-                log.write(TimePrint(f"Received >> {data}"))
-                solved = solve(data)
-                delay = random.randrange(1, 5)
-                time.sleep(delay)
-                client_socket.send(solved.encode())
-                log.write(TimePrint(f"Solved >> {solved}"))
-                print()
-                log.write()
+            client_socket.send("asd".encode())
         except Exception as e:
             client_socket.close()
             break

@@ -1,9 +1,19 @@
 import numpy as np
 
 
+def matrix_list():
+    """
+    연산 결과를 저장할 10x10 크기의 행렬 6개 생성
+    """
+    matrixList = []
+    for i in range(6):
+        matrixList.append(np.empty((10, 10)))
+    return matrixList
+
+
 def random_matrix(rangeMin=0, rangeMax=100, row=10, col=10):
     """
-    임의 값을 가지는 행렬 반환
+    무작위 정수기반(0~100사이) 행렬을 생성
     """
     matrix = np.random.randint(rangeMin, rangeMax + 1, size=(row, col))
     return matrix

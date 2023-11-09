@@ -5,6 +5,7 @@ from clock import Clock
 from threading import Thread
 import os
 from dict_convert import *
+import numpy as np
 
 client_sockets = []
 
@@ -20,6 +21,9 @@ log = Log("Server.txt")
 
 def client_name(client_socket):
     return f"Client{client_sockets.index(client_socket)+1}"
+
+
+matrixList2d = []
 
 
 def threaded(client_socket, addr):
@@ -45,7 +49,6 @@ def threaded(client_socket, addr):
                     clock.get(),
                 )
             )
-
             receivedData = data.decode("utf-8")
 
         except ConnectionResetError as e:
