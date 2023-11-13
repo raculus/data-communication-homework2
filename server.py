@@ -6,6 +6,7 @@ from threading import Thread
 import os
 from dict_convert import *
 import numpy as np
+import pickle
 
 client_sockets = []
 
@@ -19,22 +20,24 @@ clock = Clock()
 log = Log("Server.txt")
 
 
-def client_name(client_socket):
-    return f"Client{client_sockets.index(client_socket)+1}"
+def client_index(client_socket):
+    return client_sockets.index(client_socket) + 1
 
 
 matrixList2d = []
 
 
 def threaded(client_socket, addr):
-    name = client_name(client_socket)
-    dic = {"name": name}
-    client_socket.send(dict_to_str(dic).encode())
+    index = client_index(client_socket)
+    name = f"Client{index}"
+    dic = {"index": index}
+    client_socket.sendall(pickle.dumps(dic))
 
     while True:
+        if len(client_sockets) < 4:
+            continue
         try:
             data = client_socket.recv(1024)
-
             if not data:
                 log.write(
                     TimePrint(
@@ -43,13 +46,25 @@ def threaded(client_socket, addr):
                     )
                 )
                 break
+
+            data = pickle.loads(data)
+
+            if index % 2 == 0:
+                dest = index - 1
+            else:
+                dest = index + 1
+
+            if "arr" in data:
+                TimePrint(f"Client{index}에서 Client{dest}로 {data} 전송")
+                data["from"] = index
+                client_sockets[dest - 1].sendall(pickle.dumps(data))
+
             log.write(
                 TimePrint(
-                    f"Received from {addr[0]} ({name}) >> {data.decode('utf-8')}",
+                    f"Received from {addr[0]} ({name}) >> {data}",
                     clock.get(),
                 )
             )
-            receivedData = data.decode("utf-8")
 
         except ConnectionResetError as e:
             log.write(
@@ -65,6 +80,7 @@ def threaded(client_socket, addr):
 
 
 def server():
+    global log
     log.write(TimePrint(f"Server start at {HOST}:{PORT}", clock.get()))
     server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     server_socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
@@ -77,9 +93,8 @@ def server():
         while True:
             client_socket, addr = server_socket.accept()
             client_sockets.append(client_socket)
-            client_thread = Thread(target=threaded, args=(client_socket, addr))
-            client_thread.daemon = True
-            client_thread.start()
+            start_new_thread(threaded, (client_socket, addr))
+            TimePrint(f"Join {addr[0]} (Client{client_sockets.index(client_socket)+1})")
 
     except Exception as e:
         log.write(TimePrint(f"Error: {e}", clock.get()))
